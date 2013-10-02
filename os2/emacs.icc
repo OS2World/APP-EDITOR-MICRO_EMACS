@@ -1,0 +1,7 @@
+obj\basic obj\bind obj\buffer obj\char obj\crypt obj\screen obj\keyboard+
+obj\display obj\eval obj\exec obj\file obj\fileio obj\os2 obj\input+
+obj\isearch obj\line obj\main obj\random obj\region obj\lock obj\dolock+
+obj\search obj\replace obj\tags obj\window obj\word obj\os2npm obj\mouse
+bin\emacs.exe /BASE:65536 /Align:16 /EXEPACK , emacs.map
+
+emacs.def

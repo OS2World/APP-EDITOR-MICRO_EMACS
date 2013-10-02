@@ -1,0 +1,145 @@
+int PASCAL NEAR ibmputc(ch) /* put a character at the current position in the
+		   current colors */
+
+int ch;
+
+{
+	/* if its a newline, we have to move the cursor */
+	if (ch == '\n' || ch == '\r') {
+		rg.h.ah = 3;
+		int86(0x10, &rg, &rg);
+		if (rg.h.dh == 24) {
+			ibmmove(20, 0);
+			/* we must scroll the screen */
+			rg.h.ah = 6;	/* scroll up */
+			rg.h.al = 1;	/* # of lines to scroll by */
+#if	COLOR
+			rg.h.bh = cfcolor; /* attribute for blank line */
+#else
+			rg.h.bh = 0; /* attribute for blank line */
+#endif
+			rg.x.cx = 0;	/* upper left corner of scroll */
+			rg.x.dx = 0x184f;/* lower right */
+			int86(0x10, &rg, &rg);
+			rg.h.dh = 23;
+		}
+		ibmmove(rg.h.dh + 1, 0);
+		return(TRUE);
+	}
+
+#if	1
+	if (ch == '\b') {
+
+		/* backup the cursor by 1 position */
+		rg.h.ah = 3;		/* read current position */
+		int86(0x10, &rg, &rg);
+		rg.h.dl--;		/* move it forward one */
+		rg.h.ah = 2;		/* set its new position */
+		int86(0x10, &rg, &rg);
+	
+		rg.h.ah = 9;		/* write char with attributes to cursor position */
+		rg.h.bh = 0;		/* display page zero */
+		rg.x.cx = 1;		/* only one please! */
+		rg.h.al = ' ';		/* character to write */
+#if	COLOR
+		rg.h.bl = ((ctrans[gbcolor] << 4) | ctrans[gfcolor]);/* attribute */
+#else
+		rg.h.bl = 07;
+#endif
+		int86(0x10, &rg, &rg);
+		return(TRUE);
+	}
+
+	if (ch == 7) {
+		TTbeep();
+		return(TRUE);
+	}
+
+	rg.h.ah = 9;		/* write char with attributes to cursor position */
+	rg.h.bh = 0;		/* display page zero */
+	rg.x.cx = 1;		/* only one please! */
+	rg.h.al = ch;		/* character to write */
+#if	COLOR
+	rg.h.bl = ((ctrans[gbcolor] << 4) | ctrans[gfcolor]);	/* attribute */
+#else
+	rg.h.bl = 07;
+#endif
+	int86(0x10, &rg, &rg);
+
+	/* advance the cursor by 1 position */
+	rg.h.ah = 3;		/* read current position */
+	int86(0x10, &rg, &rg);
+	rg.h.dl++;		/* move it forward one */
+	rg.h.ah = 2;		/* set its new position */
+	int86(0x10, &rg, &rg);
+#else
+	rg.h.ah = 14;		/* write char to screen with current attrs */
+	rg.h.al = ch;
+#if	COLOR
+	if (dtype != CDMONO)
+		rg.h.bl = cfcolor;
+	else
+		rg.h.bl = 0x07;
+#else
+	rg.h.bl = 0x07;
+#endif
+	int86(0x10, &rg, &rg);
+#endif
+}
+
+int PASCAL NEAR ibmeeop()
+
+{
+	rg.h.ah = 6;		/* scroll page up function code */
+	rg.h.al = 0;		/* # lines to scroll (clear it) */
+	rg.x.cx = (term.t_roworg << 8) | (term.t_colorg);
+				/* upper left corner of scroll */
+	rg.x.dx = ((term.t_nrow + term.t_roworg) << 8) |
+			(term.t_ncol + term.t_colorg - 1);
+				/* lower right corner of scroll */
+#if	COLOR
+	if (dtype != CDMONO)
+		if (revflag)
+			rg.h.bh = ((ctrans[gfcolor] & 15) << 4) | (ctrans[gbcolor] & 15);
+		else
+			rg.h.bh = ((ctrans[gbcolor] & 15) << 4) | (ctrans[gfcolor] & 15);
+	else
+		if (revflag)
+			rg.h.bh = 70;
+		else
+			rg.h.bh = 07;
+#else
+	rg.h.bh = 07;
+#endif
+	int86(0x10, &rg, &rg);
+}
+
+int PASCAL NEAR ibmclrdesk()
+
+{
+	int attr;		/* attribute to fill screen with */
+
+	rg.h.ah = 6;		/* scroll page up function code */
+	rg.h.al = 0;		/* # lines to scroll (clear it) */
+	rg.x.cx = 0;		/* upper left corner of scroll */
+	rg.x.dx = (desk_rows << 8) | desk_cols;
+				/* lower right corner of scroll */
+#if	COLOR
+	if (dtype != CDMONO)
+		if (revflag)
+			attr = ((ctrans[gfcolor] & 15) << 4) | (ctrans[deskcolor] & 15);
+		else
+			attr = ((ctrans[deskcolor] & 15) << 4) | (ctrans[gfcolor] & 15);
+	else
+		if (revflag)
+			attr = 70;
+		else
+			attr = 07;
+#else
+	attr = 07;
+#endif
+
+	rg.h.bh = attr;
+	int86(0x10, &rg, &rg);
+}
+

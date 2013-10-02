@@ -1,0 +1,149 @@
+
+
+
+MICRO-EMACS for OS/2 2.x 
+
+This is a 32 Bit version of Ê-emacs 3.12 for OS/2 2.X with mouse and
+(emacs)-window-support
+
+It can be now compiled by two different Compilers: EMX-GNU-GCC and
+IBM-ICC. 
+
+Both versions act nearly the same, with only (we hope) one difference:
+the gcc-version can be started using wildcards for the filenames at the
+command-line, the icc- version don't. 
+
+This package contains a ready-to-run icc-version of Êemacs in the
+os2/bin-directory.
+
+
+INSTALLING THE GCC/EMX-VERSION OF EMX
+
+To install the Gcc -Version, you should put the runtime libraries
+emx.dll and emxlibc.dll into a dircetory, which is mentioned in your
+LIBPATH-statement in the config.sys. The Executable-File (which is
+called MEMACS.EXE to avoid interference with the REAL emacs (eight
+megabytes always constantly swapping ;-) ) should find its place
+somewhere in a path which is in your PATH. Actually this package does
+NOT contain this file! (read at the end of this file) . To use the
+command files of emacs (*.cmd - this are no batch jobs or REXX command
+files) or the online help the environment variable DPATH has to point to
+the directory where they are installed.
+
+INSTALLING THE ICC-VERSION OF EMX
+
+To install the ICC-Version, copy the executable whereever you want, it
+is statically linked, you don't need any runtime library.
+
+
+COMPILING MICROEMACS
+
+This Zip-file is an excerpt of the original UE312DEV.ZIP-package, with
+some differences in os2.c, os2npm.c, dolock.c and estruct.h. It contains
+every file (and some more) which are necessary to recompile it.
+Try Latin as language!
+
+estruct.h is a very important file for the generation of Êemacs. 
+It controls the compilerswitches, the target OS and selects the features
+for the editor (including the language).
+
+We added a new Compiler-definition for the IBM-Compiler, ICC.
+Also we enhanced the operating-switch: OS2 
+you can now define it to 1 or 2, so it is compatible to good old OS/2 1.x .
+
+COMPILING MICRO_EMACS USING GCC 
+
+So if you want to create the EMX-GNU-GCC-based product, set OS2 as 2 and
+enable the GCC switch in estruct.h .
+
+Then change to the emacs/os2-directory
+and start your favorite make: make makefile.gcc. Now you can lean back,
+drink one (or two (computer-dependend)) cups of coffee.
+
+Afterward you will find a memacs.exe in the os2/bin-directory!
+
+COMPILING MICRO_EMACS USING ICC
+
+if you want to create the ICC-based product, set OS2 to 2, too, but be
+shure to set GCC to 0 and ICC to 1! You can use IBM C-SET++ 2.0 to 2.1
+and probably IBM FIRSTSTEP (there you should delete the /O+ optimize
+switch in the makefile.icc), perhaps it works with IBM C-SET 1.0, I
+don't know. You also must have correctly installed 2.x Toolkit 2.x.
+
+
+Change to the emcs/os2 directory and start compiling:  nmake
+makefile.icc. Don't be alarmed by the warnings and information-messages!
+The creation of emacs will go a little bit faster, but you will be
+easily be able to empty your cup of coffee (or tea). 
+
+The output you will find in os2/bin, it is called emacs.exe
+
+ADVICE FOR OTHER COMPILERS
+
+If you want to use another compiler you will have to add some
+code for a 16:16 bit to a 32 bit pointer conversion in the file
+src/os2npm.c.
+
+STUFF
+
+Note: We are NOT the authors of this program. Please send any questions
+or comments (and donations) about the editor itself to Daniel Lawrence
+mentioned in the file "readme" in the src directory. 
+
+	Ralf Seidel 
+	eMail: seidel3@wrcs3.urz.uni-wuppertal.de
+
+	Wulf Bramesfeld
+	eMail: bramesf@ist319.ist.rwth-aachen.de
+
+
+P.S.: As you will have recognized our english isn't the best. Comments
+and/or corrections are welcome.
+
+P.P.S.:	The adaptions were done indepently in autumn 1993.
+Ralf did it for GCC in 10.93 and Wulf did it for ICC in 9.93
+We put both streams together in april 1994, because nothings better than
+a fullscreen editor!
+
+P.P.P.S.: Because I cant get in contact to Ralf, he is not responding
+anymore, I couldn't test this version with gcc. But it should work.
+Pleas contact me, if you have problems.
+
+FIXED AND ENHANCED FEATURES:
+
+In summer '94 I fixed some bugs in the screen-management routines, so
+you are able to open, move, duplicate, resize and close emacs-screens
+like it is described in the documentation. Also I enhanced the
+video-interface for SVGA-cards. 
+
+So if you do not set the $SRES-variable, emacs does not change the
+resolution of the video-screen, it uses the current screen-dimensions.
+Example: If you change your screen using the mode-command like mode
+co132,25, ÊEmacs will use this mode. In windowed-sessions, OS/2 (2.11)
+does not allow to change to a 132-columns mode, but you can define as
+much rows as you like. 
+
+Because I didn't change the DOS-Êemacs, I added the following lines to
+my emacs.rc, which is used by both programms:
+
+!if &not &sequal $os "OS2"
+	set $sres "CGA"
+!endif
+This enables the OS/2-Êemacs to use the current video-mode, and enables a
+colored, 80x25-screen for DOS-Êemacs.
+
+Also I added two new parameters for $SRES: SVGA1 for 132x25 and SVGA2
+for 132x43. This modi will not work in an PM-window. So normally the
+Screen-resolution-macro will report an error, if emacs is started in a
+window with a set $sres "SVGAx" in the RC-file. So, if the
+window-setting fails, I changed the behaviour a little bit, it now
+changes to CGA-mode without complaining. So you can use only one
+EMACS.RC File for window and fullscreen emacs-sessions.
+
+Known Problems:
+
+If the Screen is set to a enhanced mode (132xRow) and Emacs is started
+with a set $SRES not equal to SVGAx, a protection violation happens. I
+Know WHERE it happens but I don't know exactly WHY.
+
+Wulf

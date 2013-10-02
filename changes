@@ -1,0 +1,113 @@
+
+changes:
+
+os2npm.c
+Line 13: #define INCL_DOSDEVIOCTL, 
+	For IBM Toolkit 2.0 to include bsedev.h,
+	(it defines some constants for Kbd-Calls)
+
+Line 16:
+#include <signal.h>
+	This and the next changes prevent the abnormal termination of emacs
+	caused by CTRL-C or CTRL-BREAK,
+	otherwise CTRL_BREAK terminates EVERYTIME, CTRL-C in saving action
+    leaving some tmp-files and no workfile and me swearing.
+
+Line 665-666:
+	signal(SIGBREAK,SIG_IGN);
+	signal(SIGINT,SIG_IGN);
+ignores these signals.
+
+		
+Line 109-113
+#ifdef ICC
+static USHORT _Seg16 *lvb;			/* logical video buffer	*/
+#else
+static USHORT	*lvb;
+#endif
+	This is very important, because ICC normally uses the flat 0:32 memory-
+	model, but VioGetBuf returns a Pointer in ancient 16:16-manner, so an
+	access to the local video buffer ends in a protection violation.
+	The keyword _Seg16 enables icc to define lvb internally as a 16:16-
+	pointer. 
+	For further versions you have to keep in mind, that the 16bit Vio- 
+	Kbd- and Mou- Calls are undocumented since 2.x, they exist only for
+	compatibility reasons. 
+	They are replaced by a device-driver, which gives nearly the same
+	usability. (See OS/2 2.0 Technical Library, Physical Device Driver
+	Reference, IBM-Nr: 10G6266). I will try to rewrite OS2NPM.C in this
+	manner, if I have some spare time.
+
+	If someone uses a different 32-bit flat-mode compiler, he has to find
+	out an equivalent to this _Seg16 statement.
+	It's a pity, that the EMX-GNU-c-compiler don't has a possibility achieving
+	this. But with the renewing of OS2NPM i will find a way to use GNU for
+	compiling, because its a great tool.
+
+***************
+*    os2.c:   *
+***************
+Line 16:
+#include		<process.h>
+
+and:
+Line 296-301 in proc. shell()
+
+#ifdef OS22X
+	return(spawnlp(P_WAIT,shell,NULL));
+#else
+	return(system(shell);
+#endif
+
+	I had very much trouble using your version of shell(), because my
+	command-processor(4os2.exe) couldnt load twice, it only produced a bundle
+	of error-lines. This behaviour could be simulated from command-line,
+	(C:>4os2 /C 4os2),so its definitly a bug in it. But I changed
+	shell-function, which is also much more elegant in this way.
+	The problem arised also with the 16-bit version compiled with MSC 6.0,
+	I don't know, what happens with earlier (1.x) versions of OS/2,
+	so I made this changes OS22X dependant.
+
+Line 26:
+#if ICC
+#include		<io.h>
+#define access _access
+#endif
+		ICC's C-Library gives _access instead of access 
+
+Line 163:
+	filnam=tmpnam();
+Line 234:
+	filnam1=tmpnam();
+Line 249:
+	filnam2 = tmpnam();
+	
+	The function mktemp is not available in ICC's C-Library,
+	so I exchanged it with tmpnam(), the disadvantage is, 
+	that the temporary file is created in the actual-directory.
+	This function was also available in MSC' C-library.
+	
+	I had to rename the char * tmpnam to tempnam.
+
+Line 356-361:
+#if ICC
+FILEFINDBUF3 pBuf;	/* buffer to hold file information */
+#define FILEINFOLEVEL FIL_STANDARD /* we want standard file-info */
+#else
+FILEFINDBUF pBuf;	/* old buffer struct (no longer supported) */
+#define FILEINFOLEVEL 0L    /* option was reserved in 1.x	*/
+#endif
+
+and
+Line 411-412:
+	if (DosFindFirst(fname, &hDir, FILE_DIRECTORY,
+			  &pBuf, sizeof(pBuf), &num_found, FILEINFOLEVEL) != 0)
+
+The old FILEFIND-structure is not supported using ICC compiler,
+the new one is handled very similar, but the last option of DosFindFirst,
+which was reserved in OS/2 1.x informs DosFindFirst which info is wanted
+
+dolock.c
+Line 70:
+#if	(WINNT && MSC) || ICC
+	ICC's C-lib also have _chdir .. _rmdir instead of chdir .. rmdir

@@ -1,0 +1,4 @@
+os2npm.c(49:0) : error EDC0504: Unable to find #include file "estruct.h".
+os2npm.c(50:0) : error EDC0504: Unable to find #include file "eproto.h".
+os2npm.c(51:0) : error EDC0504: Unable to find #include file "edef.h".
+os2npm.c(52:0) : error EDC0504: Unable to find #include file "elang.h".
